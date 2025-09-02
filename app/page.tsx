@@ -56,7 +56,7 @@ export default function Home() {
               width={100}
               height={100}
             />
-            <span>Ask me anything about animal crossing :)</span>
+            <span>Me pergunte qualquer coisa sobre Animal Crossing :)</span>
           </div>
         )}
       </div>
