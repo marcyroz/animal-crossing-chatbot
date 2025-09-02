@@ -1,38 +1,98 @@
-"use client"
+"use client";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Send } from "lucide-react";
+import { Send, Square } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Message } from "./_components/message";
+import { useChat } from "@ai-sdk/react";
 
 export default function Home() {
-  const [inputValue, setInputValue] = useState("");
-  const [messages, setMessages] = useState<{ isUser: boolean; content: string }[]>([]);
+  const [input, setInput] = useState("");
+  const { messages, sendMessage, status, stop } = useChat();
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-  const handleSend = () => {
-    if (inputValue.trim()) {
-      setMessages([...messages, { isUser: true, content: inputValue }]);
-      setInputValue("");
-    }
-  };
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   return (
-    <div className="flex mx-auto h-screen py-20 border-b-pink-300 max-w-[50%] flex-col">
-      <div className="flex w-full h-full items-center justify-center">
-           {messages.length > 0 ? messages.map((msg, index) => (
-               <Message key={index} isUser={msg.isUser} content={msg.content} />
-           )) : (
-               <p>Ask me anything about animal crossing :)</p>
-           )}
+    <div className="flex flex-col h-screen mx-auto lg:max-w-[50%]  lg:py-10">
+
+<div className="p-4 flex justify-between items-center">
+<span className="font-bold text-[#FF6D8D] text-2xl">Animal crossing chatbot</span>
+<Image src="/leaf.svg" alt="Leaf" width={30} height={30} />
+</div>
+      <div className="flex-1 overflow-y-auto px-4 py-6">
+        {messages.length > 0 ? (
+          <div className="flex flex-col gap-2">
+            {messages.map((message, index) => (
+              <div
+                key={index}
+                className={`flex w-full ${
+                  message.role === "user" ? "justify-end" : "justify-start"
+                }`}
+              >
+                <Message isUser={message.role === "user"}>
+                  {message.parts.map((part, i) => {
+                    switch (part.type) {
+                      case "text":
+                        return (
+                          <div key={`${message.id}-${i}`}>{part.text}</div>
+                        );
+                    }
+                  })}
+                </Message>
+              </div>
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+        ) : (
+          <div className="gap-6 items-center flex flex-col justify-center h-full text-center">
+            <Image
+              src="/isabela.webp"
+              alt="Isabela from Animal Crossing"
+              width={100}
+              height={100}
+            />
+            <span>Ask me anything about animal crossing :)</span>
+          </div>
+        )}
       </div>
-      <div className="flex gap-2 w-full">
-        <Input value={inputValue} onChange={(e) => setInputValue(e.target.value)} />
-        <Button className="bg-[#FF6D8D]" onClick={handleSend}>
-          <Send />
+
+      <form
+        className="flex gap-2 w-full p-4 bg-white"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!input.trim()) return;
+          sendMessage({ text: input });
+          setInput("");
+        }}
+      >
+        <Input
+          placeholder="Escreva uma mensagem..."
+          value={input}
+          onChange={(e) => setInput(e.currentTarget.value)}
+        />
+        {status === "streaming"?
+         <Button
+          className="bg-[#FF6D8D] hover:bg-[#FF6D8D]"
+          type="submit"
+        >
+         <Square fill="#FFFFFF"/>
         </Button>
-      </div>
+        :
+        <Button
+          className="bg-[#FF6D8D] hover:bg-[#FF6D8D]"
+          disabled={!input}
+          onClick={stop}
+        >
+         <Send/>
+        </Button>
+        }
+       
+      </form>
     </div>
   );
 }
