@@ -1,7 +1,7 @@
 
 # 🏝️ Animal Crossing Chatbot
 
-Chatbot para tirar dúvidas sobre Animal Crossing, feito com Next.js, React e Tailwind CSS.
+Chatbot para tirar dúvidas sobre Animal Crossing, feito com AI Sdk, Next.js, React e Tailwind CSS.
 
 ## ✨ Funcionalidades
 
