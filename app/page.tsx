@@ -5,12 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Send, Square } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { Message } from "./_components/message";
 import { useChat } from "@ai-sdk/react";
+import { Message } from "./_components/message";
 
 export default function Home() {
   const [input, setInput] = useState("");
-  const { messages, sendMessage, status, stop } = useChat();
+  const { messages, sendMessage, status, stop, setMessages } = useChat();
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -19,11 +19,12 @@ export default function Home() {
 
   return (
     <div className="flex flex-col h-screen mx-auto lg:max-w-[50%]  lg:py-10">
-
-<div className="p-4 flex justify-between items-center">
-<span className="font-bold text-[#FF6D8D] text-2xl">Animal crossing chatbot</span>
-<Image src="/leaf.svg" alt="Leaf" width={30} height={30} />
-</div>
+      <div className="p-4 flex justify-between items-center">
+        <span className="font-bold text-[#FF6D8D] text-2xl">
+          Animal crossing chatbot
+        </span>
+        <Image src="/leaf.svg" alt="Leaf" width={30} height={30} />
+      </div>
       <div className="flex-1 overflow-y-auto px-4 py-6">
         {messages.length > 0 ? (
           <div className="flex flex-col gap-2">
@@ -36,11 +37,20 @@ export default function Home() {
               >
                 <Message isUser={message.role === "user"}>
                   {message.parts.map((part, i) => {
-                    switch (part.type) {
-                      case "text":
-                        return (
-                          <div key={`${message.id}-${i}`}>{part.text}</div>
-                        );
+                    if (part.type === "text") {
+                      const html = part.text
+                        .replace(
+                          /\*\*(.*?)\*\*/g,
+                          (_, boldText) => `<strong>${boldText}</strong>`
+                        )
+                        .replace(/\n/g, "<br>");
+
+                      return (
+                        <div
+                          key={`${message.id}-${i}`}
+                          dangerouslySetInnerHTML={{ __html: html }}
+                        />
+                      );
                     }
                   })}
                 </Message>
@@ -59,6 +69,11 @@ export default function Home() {
             <span>Me pergunte qualquer coisa sobre Animal Crossing :)</span>
           </div>
         )}
+        {messages.length >= 6 && status !== "streaming" && (
+          <Button onClick={() => setMessages([])}>
+            Iniciar nova conversa
+          </Button>
+        )}
       </div>
 
       <form
@@ -75,23 +90,15 @@ export default function Home() {
           value={input}
           onChange={(e) => setInput(e.currentTarget.value)}
         />
-        {status === "streaming"?
-         <Button
-          className="bg-[#FF6D8D] hover:bg-[#FF6D8D]"
-          type="submit"
-        >
-         <Square fill="#FFFFFF"/>
-        </Button>
-        :
-        <Button
-          className="bg-[#FF6D8D] hover:bg-[#FF6D8D]"
-          disabled={!input}
-          onClick={stop}
-        >
-         <Send/>
-        </Button>
-        }
-       
+        {status === "streaming" ? (
+          <Button type="submit">
+            <Square fill="#FFFFFF" />
+          </Button>
+        ) : (
+          <Button disabled={!input || messages.length >= 6} onClick={stop}>
+            <Send />
+          </Button>
+        )}
       </form>
     </div>
   );
